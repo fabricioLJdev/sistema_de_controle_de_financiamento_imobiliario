@@ -63,30 +63,73 @@
 # conceitos de programação e adquirindo experiência prática para composição
 # de portfólio profissional.
 
+class Entrada():
+    def __init__(self, valor, metodo_de_pagamento):
+        self.valor_entrada = valor
+        self.metodo_de_pagamento = metodo_de_pagamento
 
+    def __str__(self):
+        return f"{self.valor_entrada}, meio de pagamento: {self.metodo_de_pagamento.capitalize()}"
+    
 class SistemaDeControle:
-
+    
     def __init__(self):
         print("Bem Vindo ao Sistema De Controle De Financiamento Imobiliário")
         self.valor_financiamento = 0
-        
+        self.valor_quitado = 0
+        self.saldo_devedor = 0
+        self.entrada = None
         while True:
             try:
                 valor = int(input("Antes de mais nada qual valor financiamento: "))
                 if valor > 0:
-                    self.valor_financiamento = valor
+                    self.valor_financiamento += valor
+                    self.saldo_devedor += self.valor_financiamento
                     break
                 else: 
                     print("Digite um valor maior que 0")
             except ValueError:
                 print("Digite somente números")
-                
+
+    def registrar_entrada(self):
+        try:
+            if self.entrada != None:
+                print("\n===Você já realizou uma entrada===\n")
+                return
+            
+            valor_entrada = int(input("Qual o valor da entrada? "))
+            
+
+            if valor_entrada > self.valor_financiamento:
+                print("Valor maior que do financiamento")
+                return
+            
+            if valor_entrada <= 0:
+                print("Valor precisa ser maior que Zero")
+                return
+            
+            opcoes_validas = ["pix", "cartão", "boleto"]
+            meio_pagamento = input("Meio de pagamento pix, cartão ou boleto? ")
+
+            if meio_pagamento.lower() not in opcoes_validas:
+                print("\n=== meio de pagamento invalida ===\n")
+                return
+
+            self.entrada = Entrada(valor_entrada, meio_pagamento)
+            self.valor_quitado += self.entrada.valor_entrada
+            self.saldo_devedor -= self.entrada.valor_entrada
+            print("\n=== Entrada realizada com sucesso ===\n")
         
+        except ValueError:
+            print("\n=== Valor inválido ===\n")
 
     def resumo_de_financiamento(self):
         return (
-            "\n === Resumo do financiamento ===\n" 
-            f"\n Valor do financiamento: R${self.valor_financiamento}\n" 
+            "\n=== Resumo do financiamento ===\n" 
+            f"\nValor do financiamento: R${self.valor_financiamento}\n"
+            f"\n{'Nenhuma entrada foi realizada' if self.entrada is None else f'Valor da entrada: R${self.entrada}'}\n"
+            f"\nValor já quitado: R${self.valor_quitado}\n"
+            f"\nResta ainda: R${self.saldo_devedor}\n"
         )
 
     def menu(self):
@@ -102,8 +145,7 @@ class SistemaDeControle:
             opcao = input("Escolha uma opção: ")
 
             if opcao == "1":
-                print("Registrar entrada")
-
+                self.registrar_entrada()
             elif opcao == "4":
                 print(self.resumo_de_financiamento())
             
@@ -112,9 +154,8 @@ class SistemaDeControle:
                 break
 
             else:
-                print("Opção inválida! Escolha entre 1 a 7.")
-
-sistema = SistemaDeControle()
+                print("\n===Opção inválida! Escolha entre 1 a 7.===\n")
 
 if __name__ == "__main__":
+    sistema = SistemaDeControle()
     sistema.menu()
