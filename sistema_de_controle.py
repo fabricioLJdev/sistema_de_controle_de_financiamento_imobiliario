@@ -64,21 +64,33 @@
 # de portfólio profissional.
 
 class Entrada():
-    def __init__(self, valor, metodo_de_pagamento):
+    def __init__(self, valor, data, metodo_de_pagamento):
         self.valor_entrada = valor
+        self.data = data
         self.metodo_de_pagamento = metodo_de_pagamento
 
     def __str__(self):
-        return f"{self.valor_entrada}, meio de pagamento: {self.metodo_de_pagamento.capitalize()}"
+        return f"Data: {self.data}, Metodo de pagamento: {self.metodo_de_pagamento.capitalize()}, Valor da entrada: R${self.valor_entrada}"
     
+class RegistrarPacelaPaga:
+    def __init__(self, data, metodo_de_pagamento, valor):
+        self.data = data
+        self.metodo_de_pagamento = metodo_de_pagamento
+        self.valor = valor
+
+    def __str__(self):
+        return f"Data: {self.data}, Metodo de pagamento: {self.metodo_de_pagamento}, Valor R${self.valor}"
+
 class SistemaDeControle:
-    
+
     def __init__(self):
         print("Bem Vindo ao Sistema De Controle De Financiamento Imobiliário")
         self.valor_financiamento = 0
         self.valor_quitado = 0
         self.saldo_devedor = 0
+        self.parcelas = []
         self.entrada = None
+
         while True:
             try:
                 valor = int(input("Antes de mais nada qual valor financiamento: "))
@@ -108,6 +120,13 @@ class SistemaDeControle:
                 print("Valor precisa ser maior que Zero")
                 return
             
+            data_input = input("Data do pagemento: ")
+            if len(data_input) == 8:
+                data = f"{data_input[:2]}/{data_input[2:4]}/{data_input[4:]}"
+            else:
+                data = data_input
+
+
             opcoes_validas = ["pix", "cartão", "boleto"]
             meio_pagamento = input("Meio de pagamento pix, cartão ou boleto? ")
 
@@ -115,21 +134,63 @@ class SistemaDeControle:
                 print("\n=== meio de pagamento invalida ===\n")
                 return
 
-            self.entrada = Entrada(valor_entrada, meio_pagamento)
+            self.entrada = Entrada(valor_entrada, data, meio_pagamento)
             self.valor_quitado += self.entrada.valor_entrada
             self.saldo_devedor -= self.entrada.valor_entrada
+            self.parcelas.append(self.entrada)
             print("\n=== Entrada realizada com sucesso ===\n")
-        
+            return
         except ValueError:
             print("\n=== Valor inválido ===\n")
+
+    def registrar_parcela(self):
+        try:
+            data_input = input("Data do pagemento: ")
+            if len(data_input) == 8:
+                data = f"{data_input[:2]}/{data_input[2:4]}/{data_input[4:]}"
+            else:
+                data = data_input
+            
+            metodos_validos = ["cartão", "deposito", "pix"]
+            
+            metodo_de_pagamento = input("Escolha um metodo de pagamento (cartão, deposito, pix): ")
+            
+            if metodo_de_pagamento.lower() not in metodos_validos:
+                print("Metodo de pagamento inválido")
+                return
+
+            valor = int(input("Digite o valor da parcela paga: "))
+
+            if valor <= 0:
+                print("Digite um valor maior que Zero")
+                return
+            
+            if valor > self.saldo_devedor:
+                print("Valor valor que o saldo devedor")
+                return
+
+            parcela = RegistrarPacelaPaga(data, metodo_de_pagamento.capitalize(), valor)
+
+            self.valor_quitado += parcela.valor
+            self.saldo_devedor -= parcela.valor
+            self.parcelas.append(parcela)
+
+            print(f"\n===Parcela paga com sucesso===\n")
+        except ValueError:
+            print(f"Valor inválido")
+
+    def listar_pagementos(self):
+        print("\n===HISTORICO DE PAGAMENTOS JÁ REALIZADO===\n")
+        for i, p in enumerate(self.parcelas, start=1):
+            print(f"{i}. {p}")
 
     def resumo_de_financiamento(self):
         return (
             "\n=== Resumo do financiamento ===\n" 
             f"\nValor do financiamento: R${self.valor_financiamento}\n"
-            f"\n{'Nenhuma entrada foi realizada' if self.entrada is None else f'Valor da entrada: R${self.entrada}'}\n"
             f"\nValor já quitado: R${self.valor_quitado}\n"
             f"\nResta ainda: R${self.saldo_devedor}\n"
+            f"\n{'Nenhuma entrada foi realizada' if self.entrada is None else f'Entrada: {self.entrada}'}\n"
         )
 
     def menu(self):
@@ -146,16 +207,21 @@ class SistemaDeControle:
 
             if opcao == "1":
                 self.registrar_entrada()
+            elif opcao == "2":
+                self.registrar_parcela()
+            elif opcao == "3":
+                self.listar_pagementos()
             elif opcao == "4":
                 print(self.resumo_de_financiamento())
             
             elif opcao == "7":
                 print("Encerrando o programa...")
                 break
-
+            
             else:
                 print("\n===Opção inválida! Escolha entre 1 a 7.===\n")
 
 if __name__ == "__main__":
     sistema = SistemaDeControle()
     sistema.menu()
+
