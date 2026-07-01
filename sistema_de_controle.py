@@ -164,7 +164,7 @@ class SistemaDeControle:
             metodo_de_pagamento = input("Escolha um metodo de pagamento (cartão, deposito, pix): ")
             
             if metodo_de_pagamento.lower() not in metodos_validos:
-                print("Metodo de pagamento inválido")
+                print("\n=== Metodo de pagamento inválido ===\n")
                 return
 
             valor = int(input("Digite o valor da parcela paga: "))
@@ -174,7 +174,7 @@ class SistemaDeControle:
                 return
             
             if valor > self.saldo_devedor:
-                print("Parcela maior que o saldo devedor")
+                print("\n=== Parcela maior que o saldo devedor ===\n")
                 return
 
             parcela = RegistrarPacelaPaga(data, metodo_de_pagamento.capitalize(), valor)
@@ -183,9 +183,9 @@ class SistemaDeControle:
             self.saldo_devedor -= parcela.valor
             self.parcelas.append(parcela)
 
-            print(f"\n===Parcela paga com sucesso===\n")
+            print("\n=== Parcela paga com sucesso ===\n")
         except ValueError:
-            print(f"Valor inválido")
+            print("\n=== Valor inválido ===\n")
 
     def listar_pagamentos(self):
         print("\n===HISTORICO DE PAGAMENTOS JÁ REALIZADO===\n")
@@ -206,7 +206,7 @@ class SistemaDeControle:
             print("\n===Você não fez nenhuma pagamento===\n")
             return
         
-        print("\nlista de pagamentos\n")
+        print("\n=== lista de pagamentos ===\n")
         for i, p in enumerate(self.parcelas, start=1):
             print(f"{i}. {p}\n")
         
@@ -239,6 +239,30 @@ class SistemaDeControle:
         except ValueError:
             print("\n=== Digite somente números ===\n")    
 
+    def listar_comprovantes(self):
+        if not self.parcelas:
+            print("\n=== lista você não fez nenhum pagamento \n===")
+            return
+
+        for i, p in enumerate(self.parcelas, start=1):
+            print(f"{i}. {p}\n")
+        try:
+            indice = int(input("Escolha a parcela para ver o comprovante: "))
+
+            if 1 <= indice <= len(self.parcelas):
+                parcela = self.parcelas[indice - 1]
+                if parcela.comprovante == None:
+                    print("\n=== Você ainda não adicionou um comprovante para essa parcela ===\n")
+                    return
+                else:
+                    print(f"\Caminho do comprovante:")
+                    print(parcela.comprovante)
+            else: 
+                print("\n=== Indice inválido ===\n")
+
+        except ValueError:
+            print("\n=== Digite somente números ===")
+
     def menu(self):
         while True:
             print("1 - Registrar entrada")
@@ -261,7 +285,8 @@ class SistemaDeControle:
                 print(self.resumo_de_financiamento())
             elif opcao == "5":
                 self.associar_comprovante_pdf()
-            
+            elif opcao == "6":
+                self.listar_comprovantes()
             elif opcao == "7":
                 print("Encerrando o programa...")
                 break
