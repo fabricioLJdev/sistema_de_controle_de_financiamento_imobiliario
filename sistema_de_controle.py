@@ -63,21 +63,25 @@
 # conceitos de programação e adquirindo experiência prática para composição
 # de portfólio profissional.
 
+from pathlib import Path
+
 class Entrada():
-    def __init__(self, valor, data, metodo_de_pagamento):
+    def __init__(self, valor, data, metodo_de_pagamento, comprovante_pdf=None):
         self.valor_entrada = valor
         self.data = data
         self.metodo_de_pagamento = metodo_de_pagamento
+        self.comprovante = comprovante_pdf
 
     def __str__(self):
         return f"Data: {self.data}, Metodo de pagamento: {self.metodo_de_pagamento.capitalize()}, Valor da entrada: R${self.valor_entrada}"
     
 class RegistrarPacelaPaga:
-    def __init__(self, data, metodo_de_pagamento, valor):
+    def __init__(self, data, metodo_de_pagamento, valor, comprovante_pdf=None):
         self.data = data
         self.metodo_de_pagamento = metodo_de_pagamento
         self.valor = valor
-
+        self.comprovante = comprovante_pdf
+    
     def __str__(self):
         return f"Data: {self.data}, Metodo de pagamento: {self.metodo_de_pagamento}, Valor R${self.valor}"
 
@@ -121,11 +125,11 @@ class SistemaDeControle:
                 return
             
             data_input = input("Data do pagemento: ")
-            if len(data_input) == 8:
+            if len(data_input) == 8 and data_input.isdigit():
                 data = f"{data_input[:2]}/{data_input[2:4]}/{data_input[4:]}"
             else:
-                data = data_input
-
+                print("Erro: informe a data no formato DDMMAAAA (ex: 26022025)")
+                return
 
             opcoes_validas = ["pix", "cartão", "boleto"]
             meio_pagamento = input("Meio de pagamento pix, cartão ou boleto? ")
@@ -145,12 +149,16 @@ class SistemaDeControle:
 
     def registrar_parcela(self):
         try:
+            if self.valor_quitado == self.valor_financiamento:
+                print("O emprestimo já foi quitado")
+                return 
+                
             data_input = input("Data do pagemento: ")
-            if len(data_input) == 8:
+            if len(data_input) == 8 and data_input.isdigit():
                 data = f"{data_input[:2]}/{data_input[2:4]}/{data_input[4:]}"
             else:
-                data = data_input
-            
+                print("Erro: informe a data no formato DDMMAAAA (ex: 26022025)")
+                return
             metodos_validos = ["cartão", "deposito", "pix"]
             
             metodo_de_pagamento = input("Escolha um metodo de pagamento (cartão, deposito, pix): ")
@@ -166,7 +174,7 @@ class SistemaDeControle:
                 return
             
             if valor > self.saldo_devedor:
-                print("Valor valor que o saldo devedor")
+                print("Parcela maior que o saldo devedor")
                 return
 
             parcela = RegistrarPacelaPaga(data, metodo_de_pagamento.capitalize(), valor)
@@ -179,7 +187,7 @@ class SistemaDeControle:
         except ValueError:
             print(f"Valor inválido")
 
-    def listar_pagementos(self):
+    def listar_pagamentos(self):
         print("\n===HISTORICO DE PAGAMENTOS JÁ REALIZADO===\n")
         for i, p in enumerate(self.parcelas, start=1):
             print(f"{i}. {p}")
@@ -192,6 +200,44 @@ class SistemaDeControle:
             f"\nResta ainda: R${self.saldo_devedor}\n"
             f"\n{'Nenhuma entrada foi realizada' if self.entrada is None else f'Entrada: {self.entrada}'}\n"
         )
+
+    def associar_comprovante_pdf(self):
+        if not self.parcelas:
+            print("\n===Você não fez nenhuma pagamento===\n")
+            return
+        
+        print("\nlista de pagamentos\n")
+        for i, p in enumerate(self.parcelas, start=1):
+            print(f"{i}. {p}\n")
+        
+        try: 
+            indice = int(input("Escolha um pagamento para associar comprovante: "))
+
+            if 1 <= indice <= len(self.parcelas):
+                parcela = self.parcelas[indice - 1]
+                entrada = input("Arraste o comprovante até o terminal ")
+                
+                entrada_limpa = entrada.strip('& "\'\\')
+
+                arquivo = Path(entrada_limpa)
+                
+                if arquivo.is_file():
+                    if arquivo.suffix.lower() in ['.pdf', '.png', '.jpg', '.jpeg']:
+                        parcela.comprovante = str(arquivo.resolve())
+                        
+                        print("\n=== Comprovante associado com sucesso ===\n")
+
+                    else:
+                        print("\n=== Formato inválido ===\n")
+                else:
+                        print("Arquivo não existe")
+                        return
+
+            else:
+                print("\n=== Indice inválido ===\n")
+
+        except ValueError:
+            print("\n=== Digite somente números ===\n")    
 
     def menu(self):
         while True:
@@ -210,9 +256,11 @@ class SistemaDeControle:
             elif opcao == "2":
                 self.registrar_parcela()
             elif opcao == "3":
-                self.listar_pagementos()
+                self.listar_pagamentos()
             elif opcao == "4":
                 print(self.resumo_de_financiamento())
+            elif opcao == "5":
+                self.associar_comprovante_pdf()
             
             elif opcao == "7":
                 print("Encerrando o programa...")
